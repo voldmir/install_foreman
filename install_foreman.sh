@@ -3,6 +3,7 @@
 apt-get update
 
 apt-get install puppetserver puppet java-11-openjdk -y
+apt-get install node-sass node -y
 echo -e "\nSetup puppet"
 
 cat << EOF > /etc/puppet/puppet.conf

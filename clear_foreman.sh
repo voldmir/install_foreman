@@ -15,6 +15,8 @@ apt-get remove postgresql16-server -y
 apt-get remove postgresql16 -y
 apt-get remove postgresql-common -y
 apt-get remove foreman -y
+apt-get remove node-sass -y
+apt-get remove node -y
 
 userdel -fr smartforeman
 userdel -fr _smartforeman
