@@ -640,7 +640,7 @@ if [[ -n $creds ]] ; then
     done
 
     echo ""
-    curl -I --request POST \
+    curl --silent --request POST \
       --header "Accept:application/json" \
       --header "Content-Type:application/json" \
       --user "$creds" \
