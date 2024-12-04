@@ -615,6 +615,7 @@ chmod 751 /run/smart-proxy
 
 chmod +x /opt/ruby/bin/smart-proxy
 
+echo -e "\nStart smart-proxy"
 systemctl daemon-reload
 systemctl enable --now smart-proxy
 
@@ -626,6 +627,8 @@ creds=$(grep "Login credentials" /var/log/foreman/ -r | sed "s,.*:Log,Log," | ta
 if [[ -n $creds ]] ; then
 
   if /sbin/systemctl is-active "foreman.service" &>/dev/null ; then
+
+    echo -e "\nRegestration smart-proxy"
 
     count=0
     while [ $count -lt 60 ] ; do
