@@ -633,6 +633,7 @@ if [[ -n $creds ]] ; then
       nc -vz `hostname` 2345 &>/dev/null
       [ "$?" -eq 0 ] && count=61
       echo -n "."
+      sleep 1
     done
 
     echo ""
