@@ -478,6 +478,8 @@ chown -R foreman:foreman /var/www/foreman
 echo -e "\nSetup enviroments"
 export PATH="/opt/ruby/bin:$PATH"
 export LD_LIBRARY_PATH=/opt/ruby/lib64/:$LD_LIBRARY_PATH
+export GEM_HOME="/opt/ruby/lib/ruby/gems/2.5.0"
+export GEM_PATH="$GEM_HOME"
 
 export RUBYOPT=-W0
 export RAILS_ENV=production
@@ -613,6 +615,8 @@ export RAILS_ENV=production
 
 export PATH="/opt/ruby/bin:\$PATH"
 export LD_LIBRARY_PATH=/opt/ruby/lib64/:\$LD_LIBRARY_PATH
+export GEM_HOME="/opt/ruby/lib/ruby/gems/2.5.0"
+export GEM_PATH="\$GEM_HOME"
 
 EOF
 
