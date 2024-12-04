@@ -640,13 +640,13 @@ if [[ -n $creds ]] ; then
     done
 
     echo ""
-    curl --request POST \
+    curl -I --request POST \
       --header "Accept:application/json" \
       --header "Content-Type:application/json" \
       --user "$creds" \
       --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
       http://`hostname`:2345/api/smart_proxies &>/dev/null
 
-    [ "$?" -eq 0 ] && echo "Smart-proxy registration success"
+    [ "$?" -eq 0 ] && echo "Smart-proxy registration success" || echo "Error registration smart-proxy"
   fi
 fi
