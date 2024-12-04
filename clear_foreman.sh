@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
 # Clear foreman installations
-systemctl stop postgresql foreman smart-proxy smart-proxy-dynflow-core puppet puppetserver
+systemctl stop postgresql 
+systemctl stop foreman 
+systemctl stop smart-proxy 
+systemctl stop smart-proxy-dynflow-core 
+systemctl stop puppet 
+systemctl stop puppetserver
 
-apt-get remove puppetserver puppet ruby -y
-apt-get remove postgresql16-server postgresql16 postgresql-common -y
+apt-get remove puppetserver -y
+apt-get remove puppet -y
+apt-get remove ruby -y
+apt-get remove postgresql16-server -y
+apt-get remove postgresql16 -y
+apt-get remove postgresql-common -y
 apt-get remove foreman -y
 
 userdel -fr smartforeman
