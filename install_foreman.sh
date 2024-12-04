@@ -617,3 +617,17 @@ chmod +x /opt/ruby/bin/smart-proxy
 
 systemctl daemon-reload
 systemctl enable --now smart-proxy
+
+
+# -----------------------------
+
+creds=$(grep "Login credentials" /var/log/foreman/ -r | sed "s,.*:Log,Log," | tail -1 | cut -d ":" -f 2 | awk -F/ 'gsub(/ */,"",$0){print $1":"$2}')
+
+if [[ -n $creds ]] ; then
+  curl --request POST \
+    --header "Accept:application/json" \
+    --header "Content-Type:application/json" \
+    --user "$creds" \
+    --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
+    http://`hostname`:2345/api/smart_proxies
+fi
