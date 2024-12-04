@@ -618,16 +618,30 @@ chmod +x /opt/ruby/bin/smart-proxy
 systemctl daemon-reload
 systemctl enable --now smart-proxy
 
-
+sleep 5
 # -----------------------------
 
 creds=$(grep "Login credentials" /var/log/foreman/ -r | sed "s,.*:Log,Log," | tail -1 | cut -d ":" -f 2 | awk -F/ 'gsub(/ */,"",$0){print $1":"$2}')
 
 if [[ -n $creds ]] ; then
-  curl --request POST \
-    --header "Accept:application/json" \
-    --header "Content-Type:application/json" \
-    --user "$creds" \
-    --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
-    http://`hostname`:2345/api/smart_proxies
+
+  if /sbin/systemctl is-active "foreman.service" &>/dev/null ; then
+
+    count=0
+    while [ $count -lt 60 ] ; do
+      (( count++ ))
+      nc -vz `hostname` 2345 &>/dev/null
+      [ "$?" -eq 0 ] && count=61
+      echo -n "."
+    done
+
+    echo ""
+    curl --request POST \
+      --header "Accept:application/json" \
+      --header "Content-Type:application/json" \
+      --user "$creds" \
+      --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
+      http://`hostname`:2345/api/smart_proxies
+
+  fi
 fi
