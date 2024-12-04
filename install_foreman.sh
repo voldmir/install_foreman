@@ -631,10 +631,10 @@ if [[ -n $creds ]] ; then
     echo -e "\nRegestration smart-proxy"
 
     count=0
-    while [ $count -lt 60 ] ; do
+    while [ $count -lt 300 ] ; do
       (( count++ ))
       nc -vz `hostname` 2345 &>/dev/null
-      [ "$?" -eq 0 ] && count=61
+      [ "$?" -eq 0 ] && count=301
       echo -n "."
       sleep 1
     done
@@ -645,7 +645,8 @@ if [[ -n $creds ]] ; then
       --header "Content-Type:application/json" \
       --user "$creds" \
       --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
-      http://`hostname`:2345/api/smart_proxies
+      http://`hostname`:2345/api/smart_proxies &>/dev/null
 
+    [ "$?" -eq 0 ] && echo "Smart-proxy registration success"
   fi
 fi
