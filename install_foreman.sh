@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-store="http://alt-mirror.arm.loc/scripts/upload"
+store="https://github.com/voldmir/install_foreman/releases/download/v1.0.2"
 
 apt-get update
 
