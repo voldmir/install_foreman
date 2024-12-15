@@ -50,5 +50,6 @@ rm -f /etc/logrotate.d/foreman
 rm -fr /var/log/{foreman,puppet,puppetserver,smart-proxy}
 rm -fr /var/spool/foreman
 rm -fr /opt/puppet
+rm -fr /usr/lib/puppet-modules
 
 systemctl daemon-reload

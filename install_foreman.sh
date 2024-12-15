@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+store="http://alt-mirror.arm.loc/scripts/upload"
+
 apt-get update
 
 apt-get install puppetserver puppet java-11-openjdk -y
@@ -67,8 +69,9 @@ systemctl enable postgresql --now
 createuser -U postgres --createdb --no-createrole foreman
 
 echo -e "\nDownload archives"
-wget -qO- http://alt-mirror.arm.loc/scripts/upload/ruby_portable-2.5.9-2.tar.gz | tar xz -C /opt
-wget -qO- http://alt-mirror.arm.loc/scripts/upload/foreman_portable-1.23.4-2.tar.gz | tar xz -C /opt
+wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
+wget -qO- "${store}/foreman_portable-1.23.4-2.tar.gz" | tar xz -C /opt
+wget -qO- "${store}/puppet-modules.tar.gz" | tar xz -C /usr/lib
 
 echo -e "\nCreate user foreman"
 getent group foreman >/dev/null || groupadd -r foreman
