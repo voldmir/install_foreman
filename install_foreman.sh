@@ -478,6 +478,9 @@ systemctl enable --now foreman
 
 echo -e "Open site:\n    http://$(hostname):2345"
 
+
+
+
 # ----------------------- smart-proxy -----------------------------
 mkdir -p /etc/smart-proxy/config/settings.d
 mkdir -p /var/lib/smart-proxy
