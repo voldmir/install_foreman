@@ -70,13 +70,18 @@ createuser -U postgres --createdb --no-createrole foreman
 
 echo -e "\nDownload archives"
 
-echo -e "   download and unpack ${store}/ruby_portable-2.5.9-2.tar.gz"
+echo -e "   download and unpack: ${store}/ruby_portable-2.5.9-2.tar.gz'"
 wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
+[ "$?" -ne 0 ] && ( echo "error download ${store}/ruby_portable-2.5.9-2.tar.gz"; exit 1 )
 
-echo -e "   download ${store}/foreman_portable-1.23.4-3.tar.gz"
-wget -qO- "${store}/foreman_portable-1.23.4-2.tar.gz" | tar xz -C /opt
+echo -e "   download and unpack: '${store}/foreman_portable-1.23.4-3.tar.gz'"
+wget -qO- "${store}/foreman_portable-1.23.4-3.tar.gz" | tar xz -C /opt
+[ "$?" -ne 0 ] && ( echo "error download ${store}/foreman_portable-1.23.4-3.tar.gz"; exit 1 )
 
+echo -e "   download: '${store}/node.rb'"
 wget -qO- "${store}/node.rb" > /etc/puppet/node.rb
+[ "$?" -ne 0 ] && ( echo "error download ${store}/node.rb"; exit 1 )
+
 chmod +x /etc/puppet/node.rb
 
 echo -e "\nCreate user foreman"
@@ -472,9 +477,9 @@ echo -e "\nStart setup foreman"
 /opt/ruby/bin/railsctl setup foreman
 
 
-su -l -s "/bin/bash" postgres -c "CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);"
-su -l -s "/bin/bash" postgres -c "CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);"
-su -l -s "/bin/bash" postgres -c "CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);"
+su -l -s "/bin/bash" postgres -c "psql -d foreman_production 'CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);'"
+su -l -s "/bin/bash" postgres -c "psql -d foreman_production 'CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);'"
+su -l -s "/bin/bash" postgres -c "psql -d foreman_production 'CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);'"
 
 systemctl daemon-reload
 systemctl enable --now foreman
