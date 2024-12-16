@@ -73,7 +73,7 @@ echo -e "\nDownload archives"
 echo -e "   download and unpack ${store}/ruby_portable-2.5.9-2.tar.gz"
 wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
 
-echo -e "   download ${store}/foreman_portable-1.23.4-2.tar.gz"
+echo -e "   download ${store}/foreman_portable-1.23.4-3.tar.gz"
 wget -qO- "${store}/foreman_portable-1.23.4-2.tar.gz" | tar xz -C /opt
 
 wget -qO- "${store}/node.rb" > /etc/puppet/node.rb
@@ -118,13 +118,13 @@ echo -e "\nCreate files"
 cat << EOF > /etc/foreman/settings.yml
 ---
 :unattended: false
-#:require_ssl: true
+:require_ssl: true
 
 # The following values are used for providing default settings during db migrate
-:oauth_active: false
+:oauth_active: true
 :oauth_map_users: false
-:oauth_consumer_key: DuUFfg3JkQrpgdHCyFFemxzxvewwegerg54rg
-:oauth_consumer_secret: FAWoGgBVk736RjRv54fe4f5we6reg4
+:oauth_consumer_key: DuUFfg3JkQrpgdHCyFFemBbRLQFmYfCQ
+:oauth_consumer_secret: FAWoGgBVk736RjRvGmR69hEQmgX3oVi3
 
 # Websockets
 :websockets_encrypt: true
@@ -659,28 +659,39 @@ sleep 5
 creds=$(grep "Login credentials" /var/log/foreman/ -r | sed "s,.*:Log,Log," | tail -1 | cut -d ":" -f 2 | awk -F/ 'gsub(/ */,"",$0){print $1":"$2}')
 
 if [[ -n $creds ]] ; then
-
-  if /sbin/systemctl is-active "foreman.service" &>/dev/null ; then
-
-    echo -e "\nRegestration smart-proxy"
-
-    count=0
-    while [ $count -lt 300 ] ; do
-      (( count++ ))
-      nc -vz `hostname` 2345 &>/dev/null
-      [ "$?" -eq 0 ] && count=301
-      echo -n "."
-      sleep 1
-    done
-
-    echo ""
-    curl --silent --request POST \
-      --header "Accept:application/json" \
-      --header "Content-Type:application/json" \
-      --user "$creds" \
-      --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
-      http://`hostname`:2345/api/smart_proxies &>/dev/null
-
-    [ "$?" -eq 0 ] && echo "Smart-proxy registration success" || echo "Error registration smart-proxy"
-  fi
+    
+    if /sbin/systemctl is-active "foreman.service" &>/dev/null ; then
+        
+        echo -e "\nRegestration smart-proxy"
+        
+        count=0
+        while [ $count -lt 300 ] ; do
+            (( count++ ))
+            nc -vz `hostname` 2345 &>/dev/null
+            [ "$?" -eq 0 ] && count=301
+            echo -n "."
+            sleep 1
+        done
+        
+        echo ""
+        curl --silent --request POST \
+        --header "Accept:application/json" \
+        --header "Content-Type:application/json" \
+        --user "$creds" \
+        --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
+        http://`hostname`:2345/api/smart_proxies &>/dev/null
+        
+        [ "$?" -eq 0 ] && echo "Smart-proxy registration success" || echo "Error registration smart-proxy"
+        
+        curl --silent --request PUT \
+        --header "Accept:application/json" \
+        --header "Content-Type:application/json" \
+        --user "$creds" \
+        --data "{\"environment\": {\"name\": \"production\"}}" \
+        http://`hostname`:2345/api/environments &>/dev/null
+        
+    fi
+    
+    
+    
 fi
