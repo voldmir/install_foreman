@@ -70,7 +70,7 @@ createuser -U postgres --createdb --no-createrole foreman
 
 echo -e "\nDownload archives"
 
-echo -e "   download and unpack: ${store}/ruby_portable-2.5.9-2.tar.gz'"
+echo -e "   download and unpack: '${store}/ruby_portable-2.5.9-2.tar.gz'"
 wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
 [ "$?" -ne 0 ] && ( echo "error download ${store}/ruby_portable-2.5.9-2.tar.gz"; exit 1 )
 
@@ -97,6 +97,8 @@ mkdir -p /var/cache/foreman/{_,openid-store}
 mkdir -p /var/spool/foreman/tmp
 mkdir -p /var/www/foreman
 
+ln -s /var/log/foreman /opt/foreman/log
+
 cat << EOF > /etc/puppet/foreman.yaml
 ---
 # Update for your Foreman and Puppet master hostname(s)
@@ -119,6 +121,8 @@ cat << EOF > /etc/foreman/settings.yml
 ---
 :unattended: false
 :require_ssl: true
+
+:trusted_hosts: [$(hostname -f),$(hostname -s),$(hostname -i)]
 
 # The following values are used for providing default settings during db migrate
 :oauth_active: true
@@ -477,9 +481,9 @@ echo -e "\nStart setup foreman"
 /opt/ruby/bin/railsctl setup foreman
 
 
-su -l -s "/bin/bash" postgres -c "psql -d foreman_production 'CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);'"
-su -l -s "/bin/bash" postgres -c "psql -d foreman_production 'CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);'"
-su -l -s "/bin/bash" postgres -c "psql -d foreman_production 'CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);'"
+su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);'"
+su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);'"
+su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);'"
 
 systemctl daemon-reload
 systemctl enable --now foreman
