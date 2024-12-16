@@ -79,9 +79,6 @@ wget -qO- "${store}/foreman_portable-1.23.4-2.tar.gz" | tar xz -C /opt
 wget -qO- "${store}/node.rb" > /etc/puppet/node.rb
 chmod +x /etc/puppet/node.rb
 
-# echo -e "   download ${store}/${store}/puppet-modules.tar.gz"
-# wget -qO- "${store}/puppet-modules.tar.gz" | tar xz -C /usr/lib
-
 echo -e "\nCreate user foreman"
 getent group foreman >/dev/null || groupadd -r foreman
 useradd -r -g foreman -d /var/lib/foreman -s /bin/bash foreman
@@ -94,8 +91,6 @@ mkdir -p /etc/foreman/plugins
 mkdir -p /var/cache/foreman/{_,openid-store}
 mkdir -p /var/spool/foreman/tmp
 mkdir -p /var/www/foreman
-
-# ln -s /usr/lib/puppet-modules/theforeman-foreman/files/external_node_v2.rb /etc/puppet/node.rb
 
 cat << EOF > /etc/puppet/foreman.yaml
 ---
@@ -485,9 +480,6 @@ systemctl daemon-reload
 systemctl enable --now foreman
 
 echo -e "Open site:\n    http://$(hostname):2345"
-
-
-
 
 # ----------------------- smart-proxy -----------------------------
 mkdir -p /etc/smart-proxy/config/settings.d
