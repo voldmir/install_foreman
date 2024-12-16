@@ -694,8 +694,10 @@ if [[ -n $creds ]] ; then
         --header "Accept:application/json" \
         --header "Content-Type:application/json" \
         --user "$creds" \
-        --data "{\"setting\":{\"value\":[\"$(hostname -f)\",\"$(hostname -s)\",\"$(hostname -i)\"]}}" \
+        --data "{\"setting\":{\"value\":\"[$(hostname -f),$(hostname -s),$(hostname -i)]\"}}" \
         http://$(hostname -f):2345/api/settings/trusted_hosts
+
+        systemctl restart foreman
 
     fi
     
