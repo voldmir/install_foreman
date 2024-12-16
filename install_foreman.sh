@@ -693,7 +693,7 @@ if [[ -n $creds ]] ; then
         --header "Accept:application/json" \
         --header "Content-Type:application/json" \
         --user "$creds" \
-        --data "{\"environment\": {\"name\": \"production\"}}" \
+        --data "{\"environments\": {\"name\": \"production\"}}" \
         http://`hostname`:2345/api/environments &>/dev/null
         
     fi
