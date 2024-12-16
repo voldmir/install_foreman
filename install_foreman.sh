@@ -69,8 +69,14 @@ systemctl enable postgresql --now
 createuser -U postgres --createdb --no-createrole foreman
 
 echo -e "\nDownload archives"
+
+echo -e "   download and unpack ${store}/ruby_portable-2.5.9-2.tar.gz"
 wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
+
+echo -e "   download ${store}/foreman_portable-1.23.4-2.tar.gz"
 wget -qO- "${store}/foreman_portable-1.23.4-2.tar.gz" | tar xz -C /opt
+
+echo -e "   download ${store}/${store}/puppet-modules.tar.gz"
 wget -qO- "${store}/puppet-modules.tar.gz" | tar xz -C /usr/lib
 
 echo -e "\nCreate user foreman"
@@ -85,6 +91,25 @@ mkdir -p /etc/foreman/plugins
 mkdir -p /var/cache/foreman/{_,openid-store}
 mkdir -p /var/spool/foreman/tmp
 mkdir -p /var/www/foreman
+
+ln -s /usr/lib/puppet-modules/theforeman-foreman/files/external_node_v2.rb /etc/puppet/node.rb
+
+cat << EOF > /etc/puppet/foreman.yaml
+---
+# Update for your Foreman and Puppet master hostname(s)
+:url: "http://$(hostname):2345"
+:ssl_ca: "/etc/puppet/ssl/certs/ca.pem"
+:ssl_cert: "/etc/puppet/ssl/certs/$(hostname).pem"
+:ssl_key: "/etc/puppet/ssl/private_keys$(hostname).pem"
+
+# Advanced settings
+:puppetdir: "/var/lib/puppetserver"
+:puppetuser: "puppet"
+:facts: true
+:timeout: 40
+:threads: null
+
+EOF
 
 echo -e "\nCreate files"
 cat << EOF > /etc/foreman/settings.yml

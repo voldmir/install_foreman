@@ -10,7 +10,7 @@ systemctl stop puppetserver
 
 apt-get remove puppetserver -y
 apt-get remove puppet -y
-apt-get remove ruby -y
+apt-get remove ruby libruby -y
 apt-get remove postgresql16-server -y
 apt-get remove postgresql16 -y
 apt-get remove postgresql-common -y
@@ -51,5 +51,6 @@ rm -fr /var/log/{foreman,puppet,puppetserver,smart-proxy}
 rm -fr /var/spool/foreman
 rm -fr /opt/puppet
 rm -fr /usr/lib/puppet-modules
+rm -fr /usr/lib/ruby
 
 systemctl daemon-reload
