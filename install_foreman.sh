@@ -476,6 +476,11 @@ export RAILS_ENV=production
 echo -e "\nStart setup foreman"
 /opt/ruby/bin/railsctl setup foreman
 
+
+su -l -s "/bin/bash" postgres -c "CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);"
+su -l -s "/bin/bash" postgres -c "CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);"
+su -l -s "/bin/bash" postgres -c "CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);"
+
 systemctl daemon-reload
 systemctl enable --now foreman
 
