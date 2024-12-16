@@ -76,7 +76,8 @@ wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
 echo -e "   download ${store}/foreman_portable-1.23.4-2.tar.gz"
 wget -qO- "${store}/foreman_portable-1.23.4-2.tar.gz" | tar xz -C /opt
 
-curl "${store}/node.rb" -o /etc/puppet/node.rb
+wget -qO- "${store}/node.rb" > /etc/puppet/node.rb
+chmod +x /etc/puppet/node.rb
 
 # echo -e "   download ${store}/${store}/puppet-modules.tar.gz"
 # wget -qO- "${store}/puppet-modules.tar.gz" | tar xz -C /usr/lib
