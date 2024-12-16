@@ -21,7 +21,7 @@ cat << EOF > /etc/puppet/puppet.conf
     privatekeydir = \$ssldir/private_keys { group = service }
     reports = foreman
     rundir = /var/run/puppet
-    server = $(hostname)
+    server = $(hostname -f)
     show_diff = true
     ssldir = /etc/puppet/ssl
     vardir = /opt/puppet/cache
@@ -38,11 +38,11 @@ cat << EOF > /etc/puppet/puppet.conf
     splay = false
     splaylimit = 1800
     usecacheonfailure = true
-    server = $(hostname)
+    server = $(hostname -f)
 [master]
     autosign = /etc/puppet/autosign.conf { mode = 0664 }
     ca = true
-    certname = $(hostname)
+    certname = $(hostname -f)
     logdir = /var/log/puppetserver
     parser = current
     rundir = /var/run/puppetserver
@@ -102,10 +102,10 @@ ln -s /var/log/foreman /opt/foreman/log
 cat << EOF > /etc/puppet/foreman.yaml
 ---
 # Update for your Foreman and Puppet master hostname(s)
-:url: "http://$(hostname):2345"
+:url: "http://$(hostname -f):2345"
 :ssl_ca: "/etc/puppet/ssl/certs/ca.pem"
-:ssl_cert: "/etc/puppet/ssl/certs/$(hostname).pem"
-:ssl_key: "/etc/puppet/ssl/private_keys$(hostname).pem"
+:ssl_cert: "/etc/puppet/ssl/certs/$(hostname -f).pem"
+:ssl_key: "/etc/puppet/ssl/private_keys$(hostname -f).pem"
 
 # Advanced settings
 :puppetdir: "/var/lib/puppetserver"
@@ -120,9 +120,7 @@ echo -e "\nCreate files"
 cat << EOF > /etc/foreman/settings.yml
 ---
 :unattended: false
-:require_ssl: true
-
-:trusted_hosts: [$(hostname -f),$(hostname -s),$(hostname -i)]
+#:require_ssl: true
 
 # The following values are used for providing default settings during db migrate
 :oauth_active: true
@@ -132,13 +130,13 @@ cat << EOF > /etc/foreman/settings.yml
 
 # Websockets
 :websockets_encrypt: true
-:websockets_ssl_key: /etc/puppet/ssl/private_keys/$(hostname).pem
-:websockets_ssl_cert: /etc/puppet/ssl/certs/$(hostname).pem
+:websockets_ssl_key: /etc/puppet/ssl/private_keys/$(hostname -f).pem
+:websockets_ssl_cert: /etc/puppet/ssl/certs/$(hostname -f).pem
 
 # SSL-settings
-:ssl_certificate: /etc/puppet/ssl/certs/$(hostname).pem
+:ssl_certificate: /etc/puppet/ssl/certs/$(hostname -f).pem
 :ssl_ca_file: /etc/puppet/ssl/certs/ca.pem
-:ssl_priv_key: /etc/puppet/ssl/private_keys/$(hostname).pem
+:ssl_priv_key: /etc/puppet/ssl/private_keys/$(hostname -f).pem
 
 # HSTS setting
 :hsts_enabled: true
@@ -480,15 +478,10 @@ export RAILS_ENV=production
 echo -e "\nStart setup foreman"
 /opt/ruby/bin/railsctl setup foreman
 
-
-su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);'"
-su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);'"
-su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);'"
-
 systemctl daemon-reload
 systemctl enable --now foreman
 
-echo -e "Open site:\n    http://$(hostname):2345"
+echo -e "Open site:\n    http://$(hostname -f):2345"
 
 # ----------------------- smart-proxy -----------------------------
 mkdir -p /etc/smart-proxy/config/settings.d
@@ -503,19 +496,19 @@ EOF
 
 cat << EOF > /etc/smart-proxy/config/settings.d/puppetca_http_api.yml
 ---
-:puppet_url: https://$(hostname):8140
+:puppet_url: https://$(hostname -f):8140
 :puppet_ssl_ca: /etc/puppet/ssl/certs/ca.pem
-:puppet_ssl_cert: /etc/puppet/ssl/certs/$(hostname).pem
-:puppet_ssl_key: /etc/puppet/ssl/private_keys/$(hostname).pem
+:puppet_ssl_cert: /etc/puppet/ssl/certs/$(hostname -f).pem
+:puppet_ssl_key: /etc/puppet/ssl/private_keys/$(hostname -f).pem
 
 EOF
 
 cat << EOF > /etc/smart-proxy/config/settings.d/puppet_proxy_puppet_api.yml
 ---
-:puppet_url: https://$(hostname):8140
+:puppet_url: https://$(hostname -f):8140
 :puppet_ssl_ca: /etc/puppet/ssl/certs/ca.pem
-:puppet_ssl_cert: /etc/puppet/ssl/certs/$(hostname).pem
-:puppet_ssl_key: /etc/puppet/ssl/private_keys/$(hostname).pem
+:puppet_ssl_cert: /etc/puppet/ssl/certs/$(hostname -f).pem
+:puppet_ssl_key: /etc/puppet/ssl/private_keys/$(hostname -f).pem
 
 EOF
 
@@ -673,7 +666,7 @@ if [[ -n $creds ]] ; then
         count=0
         while [ $count -lt 300 ] ; do
             (( count++ ))
-            nc -vz `hostname` 2345 &>/dev/null
+            nc -vz $(hostname -f) 2345 &>/dev/null
             [ "$?" -eq 0 ] && count=301
             echo -n "."
             sleep 1
@@ -684,20 +677,30 @@ if [[ -n $creds ]] ; then
         --header "Accept:application/json" \
         --header "Content-Type:application/json" \
         --user "$creds" \
-        --data "{\"smart_proxy\":{\"name\":\"`hostname`\",\"url\":\"http://`hostname`:8000\"}}" \
-        http://`hostname`:2345/api/smart_proxies &>/dev/null
+        --data "{\"smart_proxy\":{\"name\":\"$(hostname -f)\",\"url\":\"http://$(hostname -f):8000\"}}" \
+        http://$(hostname -f):2345/api/smart_proxies &>/dev/null
         
         [ "$?" -eq 0 ] && echo "Smart-proxy registration success" || echo "Error registration smart-proxy"
         
+        curl --silent --request POST \
+        --header "Accept:application/json" \
+        --header "Content-Type:application/json" \
+        --user "$creds" \
+        --data "{\"environment\": {\"name\": \"production\"}}" \
+        http://$(hostname -f):2345/api/environments &>/dev/null
+
+
         curl --silent --request PUT \
         --header "Accept:application/json" \
         --header "Content-Type:application/json" \
         --user "$creds" \
-        --data "{\"environments\": {\"name\": \"production\"}}" \
-        http://`hostname`:2345/api/environments &>/dev/null
-        
+        --data "{\"setting\":{\"value\":[\"$(hostname -f)\",\"$(hostname -s)\",\"$(hostname -i)\"]}}" \
+        http://$(hostname -f):2345/api/settings
+
     fi
     
-    
+    su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);'"
+    su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);'"
+    su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);'"
     
 fi
