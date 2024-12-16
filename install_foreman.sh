@@ -695,7 +695,7 @@ if [[ -n $creds ]] ; then
         --header "Content-Type:application/json" \
         --user "$creds" \
         --data "{\"setting\":{\"value\":[\"$(hostname -f)\",\"$(hostname -s)\",\"$(hostname -i)\"]}}" \
-        http://$(hostname -f):2345/api/settings
+        http://$(hostname -f):2345/api/settings/trusted_hosts
 
     fi
     
