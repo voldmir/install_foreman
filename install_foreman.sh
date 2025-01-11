@@ -70,9 +70,9 @@ createuser -U postgres --createdb --no-createrole foreman
 
 echo -e "\nDownload archives"
 
-echo -e "   download and unpack: '${store}/ruby_portable-2.5.9-2.tar.gz'"
-wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
-[[ "$?" -ne 0 ]] && ( echo "error download ${store}/ruby_portable-2.5.9-2.tar.gz"; exit 1 )
+echo -e "   download and unpack: '${store}/ruby_portable-2.5.9-3.tar.gz'"
+wget -qO- "${store}/ruby_portable-2.5.9-3.tar.gz" | tar xz -C /opt
+[[ "$?" -ne 0 ]] && ( echo "error download ${store}/ruby_portable-2.5.9-3.tar.gz"; exit 1 )
 
 echo -e "   download and unpack: '${store}/foreman_portable-1.23.4-3.tar.gz'"
 wget -qO- "${store}/foreman_portable-1.23.4-3.tar.gz" | tar xz -C /opt
