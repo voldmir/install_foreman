@@ -72,15 +72,15 @@ echo -e "\nDownload archives"
 
 echo -e "   download and unpack: '${store}/ruby_portable-2.5.9-2.tar.gz'"
 wget -qO- "${store}/ruby_portable-2.5.9-2.tar.gz" | tar xz -C /opt
-[ "$?" -ne 0 ] && ( echo "error download ${store}/ruby_portable-2.5.9-2.tar.gz"; exit 1 )
+[[ "$?" -ne 0 ]] && ( echo "error download ${store}/ruby_portable-2.5.9-2.tar.gz"; exit 1 )
 
 echo -e "   download and unpack: '${store}/foreman_portable-1.23.4-3.tar.gz'"
 wget -qO- "${store}/foreman_portable-1.23.4-3.tar.gz" | tar xz -C /opt
-[ "$?" -ne 0 ] && ( echo "error download ${store}/foreman_portable-1.23.4-3.tar.gz"; exit 1 )
+[[ "$?" -ne 0 ]] && ( echo "error download ${store}/foreman_portable-1.23.4-3.tar.gz"; exit 1 )
 
 echo -e "   download: '${store}/node.rb'"
 wget -qO- "${store}/node.rb" > /etc/puppet/node.rb
-[ "$?" -ne 0 ] && ( echo "error download ${store}/node.rb"; exit 1 )
+[[ "$?" -ne 0 ]] && ( echo "error download ${store}/node.rb"; exit 1 )
 
 chmod +x /etc/puppet/node.rb
 
@@ -700,9 +700,128 @@ if [[ -n $creds ]] ; then
         systemctl restart foreman
 
     fi
-    
+    echo
     su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_actions_execution_plan_uuid_id_index ON public.dynflow_actions USING btree (execution_plan_uuid, id);'"
+    echo
     su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE UNIQUE INDEX dynflow_execution_plans_uuid_index ON public.dynflow_execution_plans USING btree (uuid);'"
+    echo
     su -l -s "/bin/bash" postgres -c "psql -d foreman_production -c 'CREATE INDEX dynflow_steps_execution_plan_uuid_id_index ON public.dynflow_steps USING btree (execution_plan_uuid, id);'"
-    
+    echo
 fi
+
+
+# ---------------- smart_proxy_dynflow_core -------------
+
+cat << EOF > /var/lib/smart-proxy-dynflow-core/.bash_profile
+# ~/.bash_profile
+
+# Source global definitions.
+if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+fi
+
+# Read /etc/inputrc if the variable is not defined.
+[ -n "\$INPUTRC" ] || export INPUTRC=/etc/inputrc
+
+export USERNAME=smartforeman
+
+export RUBYOPT=-W0
+export RAILS_ENV=production
+
+export PATH="/opt/ruby/bin:\$PATH"
+export LD_LIBRARY_PATH=/opt/ruby/lib64/:\$LD_LIBRARY_PATH
+export GEM_HOME="/opt/ruby/lib/ruby/gems/2.5.0"
+export GEM_PATH="\$GEM_HOME"
+
+EOF
+
+cat << EOF > /etc/smart_proxy_dynflow_core/settings.yml
+---
+# Path to dynflow database, leave blank for in-memory non-persistent database
+:database:
+
+# URL of the foreman, used for reporting back
+:foreman_url: 'http://$(hostname):2345'
+
+# SSL settings for client authentication against Foreman
+:foreman_ssl_ca: /etc/puppet/ssl/certs/ca.pem
+:foreman_ssl_cert: /etc/puppet/ssl/certs/$(hostname).pem
+:foreman_ssl_key: /etc/puppet/ssl/private_keys/$(hostname).pem
+
+:console_auth: false
+
+# Set to true to make the core fork to background after start
+# :daemonize: false
+# :pid_file: /var/run/foreman-proxy/smart_proxy_dynflow_core.pid
+
+# Listen on address
+:listen: 127.0.0.1
+
+# Listen on port
+:port: 8008
+
+# SSL settings for running core as https service
+# :use_https: false
+# :ssl_ca_file: /etc/puppet/ssl/certs/ca.pem
+# :ssl_certificate: /etc/puppet/ssl/certs/$(hostname).pem
+# :ssl_private_key: /etc/puppet/ssl/private_keys/$(hostname).pem
+
+# Use this option only if you need to disable certain cipher suites.
+# Note: we use the OpenSSL suite name, take a look at:
+# https://www.openssl.org/docs/manmaster/apps/ciphers.html#CIPHER-SUITE-NAMES
+# for more information.
+#:ssl_disabled_ciphers: [CIPHER-SUITE-1, CIPHER-SUITE-2]
+
+# Use this option only if you need to strictly specify TLS versions to be
+# disabled. SSLv3 and TLS v1.0 are always disabled and cannot be configured.
+# Specify versions like: '1.1', or '1.2'
+#:tls_disabled_versions: []
+
+# File to log to, leave empty for logging to STDOUT
+:log_file: /var/log/smart-proxy/smart_proxy_dynflow_core.log
+
+# Log level, one of UNKNOWN, FATAL, ERROR, WARN, INFO, DEBUG
+# :log_level: ERROR
+
+# Maximum age of execution plans to keep before having them cleaned
+# by the execution plan cleaner (in seconds), defaults to 24 hours
+# :execution_plan_cleaner_age: 86400
+
+EOF
+
+mkdir -p /var/lib/smart-proxy-dynflow-core
+mkdir -p /run/smart-proxy-dynflow-core
+
+
+cat << EOF > /lib/systemd/system/smart-proxy-dynflow-core.service
+[Unit]
+Description=Foreman smart proxy dynflow core service
+Documentation=https://github.com/theforeman/smart_proxy_dynflow
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=notify
+User=smartforeman
+WorkingDirectory=/var/lib/smart-proxy-dynflow-core
+PIDFile=/run/smart-proxy-dynflow-core/smart-proxy-dynflow-core.pid
+ExecStart=/bin/bash -lc 'bundle exec /opt/ruby/bin/smart_proxy_dynflow_core --no-daemonize -p /run/smart-proxy-dynflow-core/smart-proxy-dynflow-core.pid'
+EnvironmentFile=-/etc/sysconfig/smart-proxy-dynflow-core
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+cat << EOF > /var/lib/smart-proxy-dynflow-core/Gemfile
+gem 'smart_proxy_dynflow_core'
+gem 'foreman_remote_execution_core', '~> 1.4.0'
+gem 'ed25519'
+gem 'bcrypt_pbkdf'
+
+EOF
+
+chown -R smartforeman:smartforeman /var/lib/smart-proxy-dynflow-core
+chown -R smartforeman:smartforeman /run/smart-proxy-dynflow-core
+
+systemctl daemon-reload
+systemctl enable --now smart-proxy-dynflow-core
