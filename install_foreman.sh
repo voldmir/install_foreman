@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-store="https://github.com/voldmir/install_foreman/releases/download/v1.0.2"
+store="https://github.com/voldmir/install_foreman/releases/download/v1.0.3"
 
 apt-get update
 
@@ -83,6 +83,9 @@ wget -qO- "${store}/node.rb" > /etc/puppet/node.rb
 [[ "$?" -ne 0 ]] && ( echo "error download ${store}/node.rb"; exit 1 )
 
 chmod +x /etc/puppet/node.rb
+
+echo -e "   download ${store}/${store}/puppet-modules.tar.gz"
+wget -qO- "${store}/puppet-modules.tar.gz" | tar xz -C /usr/lib
 
 echo -e "\nCreate user foreman"
 getent group foreman >/dev/null || groupadd -r foreman
