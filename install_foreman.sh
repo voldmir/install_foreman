@@ -715,29 +715,6 @@ fi
 
 # ---------------- smart_proxy_dynflow_core -------------
 
-cat << EOF > /var/lib/smart-proxy-dynflow-core/.bash_profile
-# ~/.bash_profile
-
-# Source global definitions.
-if [ -f /etc/bashrc ]; then
-        . /etc/bashrc
-fi
-
-# Read /etc/inputrc if the variable is not defined.
-[ -n "\$INPUTRC" ] || export INPUTRC=/etc/inputrc
-
-export USERNAME=smartforeman
-
-export RUBYOPT=-W0
-export RAILS_ENV=production
-
-export PATH="/opt/ruby/bin:\$PATH"
-export LD_LIBRARY_PATH=/opt/ruby/lib64/:\$LD_LIBRARY_PATH
-export GEM_HOME="/opt/ruby/lib/ruby/gems/2.5.0"
-export GEM_PATH="\$GEM_HOME"
-
-EOF
-
 cat << EOF > /etc/smart_proxy_dynflow_core/settings.yml
 ---
 # Path to dynflow database, leave blank for in-memory non-persistent database
