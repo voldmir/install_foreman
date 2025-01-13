@@ -490,6 +490,8 @@ export RAILS_ENV=production
 echo -e "\nStart setup foreman"
 /opt/ruby/bin/railsctl setup foreman
 
+sed -i 's/RAKE_CMD=\/usr\/bin\/rake/RAKE_CMD=\/opt\/ruby\/bin\/rake/g' /opt/foreman/script/foreman-rake
+
 systemctl daemon-reload
 systemctl enable --now foreman
 
