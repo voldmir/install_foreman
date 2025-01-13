@@ -99,6 +99,7 @@ mkdir -p /etc/foreman/plugins
 mkdir -p /var/cache/foreman/{_,openid-store}
 mkdir -p /var/spool/foreman/tmp
 mkdir -p /var/www/foreman
+mkdir -p /var/run/foreman
 
 ln -s /var/log/foreman /opt/foreman/log
 
@@ -335,10 +336,11 @@ Type=forking
 User=root
 TimeoutSec=90
 WorkingDirectory=/var/lib/foreman
-ExecStart=bundle exec /opt/ruby/bin/dynflow start
-ExecReload=bundle exec /opt/ruby/bin/dynflow restart
-ExecStop=bundle exec /opt/ruby/bin/dynflow stop
 EnvironmentFile=-/etc/sysconfig/foreman-jobs
+
+ExecStart=/opt/ruby/bin/bundle exec /opt/ruby/bin/dynflow start
+ExecReload=/opt/ruby/bin/bundle exec /opt/ruby/bin/dynflow restart
+ExecStop=/opt/ruby/bin/bundle exec /opt/ruby/bin/dynflow stop
 
 [Install]
 WantedBy=multi-user.target
@@ -427,7 +429,7 @@ EOF
 cat << EOF > /etc/sysconfig/foreman-jobs
 ### Mandatory variables
 EXECUTOR_USER=foreman
-EXECUTOR_PID_DIR=/run/foreman
+EXECUTOR_PID_DIR=/var/run/foreman
 EXECUTOR_LOG_DIR=/var/log/foreman
 EXECUTOR_ROOT=/opt/foreman
 RAILS_ENV=production
@@ -452,6 +454,12 @@ RUBY_GC_OLDMALLOC_LIMIT_MAX=16000100
 # Set memory polling interval, process memory will be checked every N seconds.
 # EXECUTOR_MEMORY_MONITOR_INTERVAL=60
 
+# Custom ruby
+PATH="/opt/ruby/bin:/var/lib/foreman/bin:/bin:/usr/bin:/usr/local/bin:/usr/games:/var/cache/ruby/gemie/bin:/usr/lib/ruby/bin"
+LD_LIBRARY_PATH=/opt/ruby/lib64/
+GEM_HOME="/opt/ruby/lib/ruby/gems/2.5.0"
+GEM_PATH="/opt/ruby/lib/ruby/gems/2.5.0"
+
 EOF
 
 echo -e "\nCreate symlinks"
@@ -468,6 +476,7 @@ chown -R foreman:foreman /var/log/foreman
 chown -R foreman:foreman /var/cache/foreman
 chown -R foreman:foreman /var/spool/foreman
 chown -R foreman:foreman /var/www/foreman
+chown -R foreman:foreman /var/run/foreman
 
 echo -e "\nSetup enviroments"
 export PATH="/opt/ruby/bin:$PATH"
@@ -483,6 +492,8 @@ echo -e "\nStart setup foreman"
 
 systemctl daemon-reload
 systemctl enable --now foreman
+
+systemctl enable --now foreman-jobs
 
 echo -e "Open site:\n    http://$(hostname -f):2345"
 
