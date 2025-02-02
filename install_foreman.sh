@@ -505,6 +505,19 @@ mkdir -p /var/lib/smart-proxy
 mkdir -p /var/log/smart-proxy
 mkdir -p /run/smart-proxy
 
+cat << EOF > /etc/smart-proxy/config/settings.d/puppet.yml
+---
+# Can be true, false, or http/https to enable just one of the protocols
+:enabled: http
+# valid providers:
+#   puppet_proxy_mcollective (uses mco puppet)
+#   puppet_proxy_ssh         (run puppet over ssh)
+#   puppet_proxy_salt        (uses salt puppet.run)
+#   puppet_proxy_customrun   (calls a custom command with args)
+#:use_provider: puppet_proxy_customrun
+:puppet_version: $(rpm -q puppetserver | cut -d "-" -f 2)
+EOF
+
 cat << EOF > /etc/smart-proxy/config/settings.d/facts.yml
 ---
 :enabled: true
@@ -727,6 +740,7 @@ fi
 
 
 # ---------------- smart_proxy_dynflow_core -------------
+mkdir -p /etc/smart_proxy_dynflow_core/
 
 cat << EOF > /etc/smart_proxy_dynflow_core/settings.yml
 ---
@@ -818,3 +832,14 @@ chown -R smartforeman:smartforeman /run/smart-proxy-dynflow-core
 
 systemctl daemon-reload
 systemctl enable --now smart-proxy-dynflow-core
+
+
+cat << EOF > /etc/tmpfiles.d/tmpfiles-foreman-smart-proxy.conf
+#
+d /var/log/smart-proxy/ 0775 smartforeman smartforeman -
+d /var/log/foreman/ 0755 foreman foreman -
+d /run/foreman/ 0755 foreman foreman -
+d /run/smart-proxy/ 0751 smartforeman foreman -
+d /run/smart-proxy-dynflow-core/ 0755 smartforeman smartforeman -
+
+EOF
