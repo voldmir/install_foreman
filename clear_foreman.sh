@@ -53,5 +53,6 @@ rm -fr /opt/puppet
 rm -fr /usr/lib/puppet-modules
 rm -fr /usr/lib/ruby
 rm -f /etc/tmpfiles.d/tmpfiles-foreman-smart-proxy.conf
+rm -fr /etc/smart_proxy_dynflow_core
 
 systemctl daemon-reload
