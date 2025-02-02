@@ -52,5 +52,6 @@ rm -fr /var/spool/foreman
 rm -fr /opt/puppet
 rm -fr /usr/lib/puppet-modules
 rm -fr /usr/lib/ruby
+rm -f /etc/tmpfiles.d/tmpfiles-foreman-smart-proxy.conf
 
 systemctl daemon-reload
