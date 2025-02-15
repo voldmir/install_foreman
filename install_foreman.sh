@@ -4,7 +4,8 @@ store="https://github.com/voldmir/install_foreman/releases/download/v1.0.3"
 
 apt-get update
 
-apt-get install puppetserver puppet java-11-openjdk -y
+apt-get install java-21-openjdk -y
+apt-get install puppetserver puppet -y
 apt-get install node-sass node -y
 echo -e "\nSetup puppet"
 
